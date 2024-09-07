@@ -4,6 +4,7 @@ import Filter from './components/Filter'
 import Persons from './components/Persons'
 import PersonForm from './components/PersonForm'
 import { useEffect } from 'react'
+import Notification from './components/Notification'
 
 const App = () => {
 
@@ -11,6 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchNumbers, setSearchNumbers] = useState('')
+  const [successMessage, setSuccessMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   const hook = () => {
     phonebookService.getNumbers().then(initialNumbers=>{
@@ -37,10 +40,17 @@ const App = () => {
   
     phonebookService.createNumber(personObject).then(returnedNumber => {
       setPersons(persons.concat(returnedNumber))
+      setSuccessMessage(
+        `Added ${newName}`
+      )
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+  
       setNewName('')
       setNewNumber('')
     })
-
+  
   }
 
   const updateNumber =(newName, personObject) => {
@@ -48,6 +58,12 @@ const App = () => {
     phonebookService.updateNumber(personToUpdate.id, personObject).then((updatedNumber) => {
       setPersons(persons.map(person => person.id != personToUpdate.id? person : updatedNumber))
     })
+    setSuccessMessage(
+      `${personToUpdate.name}'s number updated`
+    )
+    setTimeout(() => {
+      setSuccessMessage(null)
+    }, 5000)
   }
 
   const handleNameChange = (event) => {
@@ -71,14 +87,29 @@ const App = () => {
     if (window.confirm(`Delete ${personDeleted.name} ?`)) {
       phonebookService.deleteNumber(id).then(()=>{
         setPersons(persons.filter(person=>person.id !== id))
+        setSuccessMessage(
+          `Deleted ${personDeleted.name}`
+        )
+        setTimeout(() => {
+          setSuccessMessage(null)
+        }, 5000)
+      })
+      .catch(error => {
+        setErrorMessage(
+          `Information of ${personDeleted.name} has already been removed from server`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
       })
     }
   }
 
-
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
+      <Notification message={successMessage} type="success" />
+      <Notification message={errorMessage} type="error" />
       <Filter value={searchNumbers} onChange={handleSearchNumbers} />
       <h2>add a new</h2>
       <PersonForm addNumber={addNumber} newName={newName} handleNameChange={handleNameChange} newNumber={newNumber} handleNumberChange={handleNumberChange} />
